@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// =====================================================================
+// Punch List — Firestore security rules
+// Paste this into Firebase Console → Firestore Database → Rules → Publish
+// =====================================================================
+//
+// Policy: any signed-in user with an account in this Firebase project can
+// read and write the punch list data. Anonymous (signed-out) traffic is
+// blocked. This is appropriate for a small, trusted internal team where
+// the only people who can sign up are people you've shared the site with.
+//
+// If you later want to lock down sign-ups, disable "Email/Password" in
+// Firebase Auth and create accounts manually in the Auth tab.
+//
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Punch list items
+    match /items/{itemId} {
+      allow read, create, update, delete: if request.auth != null;
+    }
+
+    // Rooms
+    match /rooms/{roomId} {
+      allow read, create, update, delete: if request.auth != null;
+    }
+
+    // Team members — each user can write their own member doc; everyone
+    // signed in can read the directory.
+    match /members/{memberId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && request.auth.uid == memberId;
+      allow delete: if request.auth != null && request.auth.uid == memberId;
+    }
+  }
+}
