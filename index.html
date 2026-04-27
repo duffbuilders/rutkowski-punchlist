@@ -837,7 +837,7 @@ if (configFilled) {
       attachListeners();
       $("loading-screen").classList.add("hidden");
       $("app").classList.remove("hidden");
-      $("user-email").textContent = user.displayName || user.email;
+      $("user-email").textContent = user.displayName || user.email || "";
     } else {
       state.user = null;
       detachListeners();
@@ -853,10 +853,12 @@ if (configFilled) {
 async function ensureMemberDoc(user) {
   const ref = doc(db, "members", user.uid);
   const snap = await getDoc(ref);
+  const fallbackName = user.displayName
+    || (user.email ? user.email.split("@")[0] : `User ${user.uid.slice(0, 6)}`);
   if (!snap.exists()) {
     await setDoc(ref, {
-      name: user.displayName || user.email.split("@")[0],
-      email: user.email,
+      name: fallbackName,
+      email: user.email || null,
       uid: user.uid,
       addedAt: serverTimestamp()
     });
@@ -1151,7 +1153,7 @@ function openItemModal(existing) {
           completedByName: null,
           createdAt: serverTimestamp(),
           createdBy: state.user.uid,
-          createdByName: state.user.displayName || state.user.email
+          createdByName: state.user.displayName || state.user.email || "Anonymous"
         });
         toast("Item added", "success");
       }
@@ -1171,7 +1173,7 @@ async function toggleComplete(item) {
       completed,
       completedAt: completed ? serverTimestamp() : null,
       completedBy: completed ? state.user.uid : null,
-      completedByName: completed ? (state.user.displayName || state.user.email) : null,
+      completedByName: completed ? (state.user.displayName || state.user.email || "Anonymous") : null,
       updatedAt: serverTimestamp()
     });
   } catch (err) {
